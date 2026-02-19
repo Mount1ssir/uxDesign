@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduReview – Teacher Rating Portal</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { font-family: 'DM Sans', sans-serif; }
+    h1, .serif { font-family: 'DM Serif Display', serif; }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #f1f5f9; } ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 99px; }
+    .card-hover { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(79,70,229,0.12); }
+    .star-btn { transition: transform 0.1s; } .star-btn:hover { transform: scale(1.3); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease forwards; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    .slide-in { animation: slideIn 0.3s ease forwards; }
+    .bar-fill { transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  </style>
+</head>
+<body class="bg-gray-50">
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+const INITIAL_TEACHERS = [
+  { id:1, name:"Dr. Eleanor Voss", age:42, city:"Boston", subject:"Mathematics", phone:"+1 (617) 555-0142", email:"e.voss@edureview.edu", rating:4.8,
+    reviews:[
+      {id:1,author:"Alex M.",stars:5,comment:"Dr. Voss makes calculus feel intuitive. Her office hours are genuinely helpful.",date:"2025-11-03"},
+      {id:2,author:"Priya K.",stars:5,comment:"Best math teacher I've had. Patient, thorough, and brings real-world examples.",date:"2025-10-18"},
+      {id:3,author:"Tom R.",stars:4,comment:"Challenging but fair. Heavy workload, but you really learn the material.",date:"2025-09-30"},
+    ],
+    events:[
+      {id:1,title:"Calculus Exam Prep",date:"2026-03-10",time:"3:00 PM",type:"exam"},
+      {id:2,title:"Office Hours – Linear Algebra",date:"2026-02-25",time:"1:00 PM",type:"office"},
+    ]},
+  { id:2, name:"Prof. Marcus Chen", age:38, city:"San Francisco", subject:"Computer Science", phone:"+1 (415) 555-0289", email:"m.chen@edureview.edu", rating:4.9,
+    reviews:[
+      {id:1,author:"Jamie L.",stars:5,comment:"Prof. Chen is the reason I fell in love with programming. His lectures are electric.",date:"2025-11-15"},
+      {id:2,author:"Sasha T.",stars:5,comment:"Incredibly knowledgeable and up to date with industry trends. A true mentor.",date:"2025-10-22"},
+    ],
+    events:[
+      {id:1,title:"Hackathon Kickoff",date:"2026-03-01",time:"10:00 AM",type:"workshop"},
+      {id:2,title:"Algorithm Study Session",date:"2026-02-28",time:"4:00 PM",type:"study"},
+      {id:3,title:"Guest Lecture: AI Ethics",date:"2026-03-15",time:"2:00 PM",type:"lecture"},
+    ]},
+  { id:3, name:"Ms. Amara Osei", age:35, city:"Chicago", subject:"Literature", phone:"+1 (312) 555-0374", email:"a.osei@edureview.edu", rating:4.3,
+    reviews:[
+      {id:1,author:"Ben W.",stars:4,comment:"Ms. Osei brings stories alive in a way I never expected. Made me enjoy reading again.",date:"2025-11-08"},
+      {id:2,author:"Clara J.",stars:5,comment:"Her analysis of postcolonial literature is unparalleled. Changed how I see the world.",date:"2025-10-05"},
+      {id:3,author:"Diego F.",stars:4,comment:"Great discussions in class. Essay requirements could sometimes be clearer.",date:"2025-09-12"},
+    ],
+    events:[{id:1,title:"Poetry Workshop",date:"2026-03-05",time:"11:00 AM",type:"workshop"}]},
+  { id:4, name:"Dr. Lena Fischer", age:51, city:"Austin", subject:"Physics", phone:"+1 (512) 555-0461", email:"l.fischer@edureview.edu", rating:3.9,
+    reviews:[
+      {id:1,author:"Noah P.",stars:4,comment:"Dr. Fischer knows her subject deeply. Labs are fascinating even if lectures are dense.",date:"2025-11-20"},
+      {id:2,author:"Mei L.",stars:3,comment:"Brilliant professor, but moves very fast. Definitely attend office hours.",date:"2025-10-14"},
+    ],
+    events:[]},
+  { id:5, name:"Mr. Sebastián Ruiz", age:29, city:"Miami", subject:"History", phone:"+1 (305) 555-0598", email:"s.ruiz@edureview.edu", rating:4.6,
+    reviews:[
+      {id:1,author:"Anya B.",stars:5,comment:"Mr. Ruiz is so passionate about history it's contagious. Best class of my semester!",date:"2025-11-25"},
+      {id:2,author:"Luke S.",stars:4,comment:"Really engaging storyteller. Makes you feel like you were there in history.",date:"2025-10-30"},
+    ],
+    events:[
+      {id:1,title:"WWI Document Analysis",date:"2026-02-22",time:"9:00 AM",type:"study"},
+      {id:2,title:"Museum Field Trip",date:"2026-03-20",time:"8:30 AM",type:"lecture"},
+    ]},
+];
+
+const AVATAR_GRADIENTS = ["from-indigo-400 to-purple-500","from-violet-400 to-fuchsia-500","from-amber-400 to-orange-500","from-teal-400 to-cyan-500","from-rose-400 to-pink-500"];
+const SUBJECT_ICONS = {Mathematics:"∑","Computer Science":"⌘",Literature:"✦",Physics:"⚛",History:"⏳"};
+const SUBJECT_COLORS = {Mathematics:"bg-blue-100 text-blue-700",  "Computer Science":"bg-violet-100 text-violet-700",Literature:"bg-amber-100 text-amber-700",Physics:"bg-teal-100 text-teal-700",History:"bg-rose-100 text-rose-700"};
+const EVENT_TYPES = {exam:{label:"Exam Prep",color:"bg-red-100 text-red-700 border-red-200",icon:"📝"},office:{label:"Office Hours",color:"bg-blue-100 text-blue-700 border-blue-200",icon:"🚪"},workshop:{label:"Workshop",color:"bg-purple-100 text-purple-700 border-purple-200",icon:"🔬"},study:{label:"Study Session",color:"bg-green-100 text-green-700 border-green-200",icon:"📖"},lecture:{label:"Lecture",color:"bg-amber-100 text-amber-700 border-amber-200",icon:"🎓"}};
+
+function getInitials(name) {
+  return name.split(" ").filter(p=>!["Dr.","Prof.","Ms.","Mr."].includes(p)).slice(0,2).map(n=>n[0]).join("");
+}
+function fmtDate(d) {
+  return new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+}
+
+// ─── TeacherCard ──────────────────────────────────────────────────────────────
+function TeacherCard({teacher, onClick}) {
+  const grad = AVATAR_GRADIENTS[(teacher.id-1)%AVATAR_GRADIENTS.length];
+  const subColor = SUBJECT_COLORS[teacher.subject]||"bg-gray-100 text-gray-700";
+  const stars = Math.round(teacher.rating);
+  return (
+    <div onClick={()=>onClick(teacher)} className="card-hover bg-white rounded-2xl border border-gray-100 shadow-sm cursor-pointer overflow-hidden group fade-in">
+      <div className={`h-1.5 w-full bg-gradient-to-r ${grad}`}/>
+      <div className="p-6">
+        <div className="flex items-start gap-4 mb-5">
+          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${grad} flex items-center justify-center text-white text-xl font-bold shadow-lg flex-shrink-0`}>
+            {getInitials(teacher.name)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-gray-900 text-lg leading-tight">{teacher.name}</h3>
+              {teacher.rating>4.5&&<span title="Top Rated">🥇</span>}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-xl">{SUBJECT_ICONS[teacher.subject]||"📚"}</span>
+              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${subColor}`}>{teacher.subject}</span>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 mb-5">
+          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
+            <span>📍</span><span className="text-sm text-gray-600 font-medium truncate">{teacher.city}</span>
+          </div>
+          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
+            <span>🎂</span><span className="text-sm text-gray-600 font-medium">Age {teacher.age}</span>
+          </div>
+        </div>
+        <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+          <div className="flex items-center gap-0.5">
+            {[1,2,3,4,5].map(s=>(
+              <span key={s} className={`text-xl ${s<=stars?"text-amber-400":"text-gray-200"}`}>★</span>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-extrabold text-gray-900">{teacher.rating.toFixed(1)}</span>
+            <span className="text-xs text-gray-400 font-medium">{teacher.reviews.length} review{teacher.reviews.length!==1?"s":""}</span>
+          </div>
+        </div>
+      </div>
+      <div className="px-6 pb-5">
+        <div className="w-full text-center text-sm font-semibold text-indigo-600 bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white rounded-xl py-2.5 transition-all duration-300">
+          View Profile →
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ReviewSystem ─────────────────────────────────────────────────────────────
+function ReviewSystem({onSubmit}) {
+  const [hovered,setHovered]=useState(0);
+  const [selected,setSelected]=useState(0);
+  const [author,setAuthor]=useState("");
+  const [comment,setComment]=useState("");
+  const [error,setError]=useState("");
+  const [success,setSuccess]=useState(false);
+  const labels=["","Poor","Fair","Good","Great","Excellent"];
+
+  const submit=()=>{
+    if(!author.trim()) return setError("Please enter your name.");
+    if(!selected) return setError("Please select a star rating.");
+    if(comment.trim().length<10) return setError("Comment must be at least 10 characters.");
+    onSubmit({author:author.trim(),stars:selected,comment:comment.trim()});
+    setAuthor("");setComment("");setSelected(0);setHovered(0);setError("");
+    setSuccess(true);setTimeout(()=>setSuccess(false),3000);
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-2xl p-6">
+      <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2"><span>✍️</span> Write a Review</h3>
+      <div className="mb-5">
+        <label className="block text-sm font-semibold text-gray-600 mb-2">Your Rating</label>
+        <div className="flex items-center gap-1">
+          {[1,2,3,4,5].map(s=>(
+            <button key={s} className="star-btn text-3xl" onMouseEnter={()=>setHovered(s)} onMouseLeave={()=>setHovered(0)} onClick={()=>setSelected(s)}
+              style={{color:s<=(hovered||selected)?"#fbbf24":"#e5e7eb"}}>★</button>
+          ))}
+          {(hovered||selected)>0&&(
+            <span className="ml-3 text-sm font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">{labels[hovered||selected]}</span>
+          )}
+        </div>
+      </div>
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-gray-600 mb-1.5">Your Name</label>
+        <input type="text" value={author} onChange={e=>{setAuthor(e.target.value);setError("");}} placeholder="e.g. Alex M."
+          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"/>
+      </div>
+      <div className="mb-5">
+        <label className="block text-sm font-semibold text-gray-600 mb-1.5">Your Review</label>
+        <textarea value={comment} onChange={e=>{setComment(e.target.value);setError("");}} placeholder="Share your experience with this teacher..." rows={3}
+          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white resize-none"/>
+        <div className="flex justify-end mt-1">
+          <span className={`text-xs ${comment.length<10?"text-gray-400":"text-green-500"}`}>
+            {comment.length} chars {comment.length<10?`(${10-comment.length} more needed)`:"✓"}
+          </span>
+        </div>
+      </div>
+      {error&&<div className="mb-4 flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">⚠️ {error}</div>}
+      {success&&<div className="mb-4 flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-100 rounded-xl px-4 py-2.5">✅ Review submitted! Thank you.</div>}
+      <button onClick={submit} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-md">Submit Review</button>
+    </div>
+  );
+}
+
+// ─── EventCalendar ────────────────────────────────────────────────────────────
+function EventCalendar({events, onAddEvent}) {
+  const [showForm,setShowForm]=useState(false);
+  const [title,setTitle]=useState(""); const [date,setDate]=useState(""); const [time,setTime]=useState(""); const [type,setType]=useState("study"); const [error,setError]=useState("");
+  const sorted=[...events].sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  const add=()=>{
+    if(!title.trim()) return setError("Event title is required.");
+    if(!date) return setError("Please pick a date.");
+    if(!time) return setError("Please pick a time.");
+    onAddEvent({title:title.trim(),date,time,type});
+    setTitle("");setDate("");setTime("");setType("study");setError("");setShowForm(false);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2"><span>📅</span> Upcoming Events</h3>
+        <button onClick={()=>setShowForm(!showForm)} className="flex items-center gap-1.5 text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-all">
+          {showForm?"✕ Cancel":"+ Add Event"}
+        </button>
+      </div>
+      {showForm&&(
+        <div className="mb-5 bg-gray-50 border border-gray-200 rounded-2xl p-5 slide-in">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Event Title</label>
+              <input type="text" value={title} onChange={e=>{setTitle(e.target.value);setError("");}} placeholder="e.g. Final Exam Review"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"/>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Date</label>
+              <input type="date" value={date} onChange={e=>{setDate(e.target.value);setError("");}}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"/>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Time</label>
+              <input type="time" value={time} onChange={e=>{setTime(e.target.value);setError("");}}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"/>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Type</label>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(EVENT_TYPES).map(([key,cfg])=>(
+                  <button key={key} onClick={()=>setType(key)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${type===key?"bg-indigo-600 text-white border-indigo-600":"bg-white text-gray-600 border-gray-200 hover:border-indigo-300"}`}>
+                    {cfg.icon} {cfg.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          {error&&<p className="text-xs text-red-500 mb-3">⚠️ {error}</p>}
+          <button onClick={add} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm transition-all">Add to Calendar</button>
+        </div>
+      )}
+      {sorted.length===0?(
+        <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+          <div className="text-4xl mb-2">📭</div>
+          <p className="text-gray-400 font-medium text-sm">No events scheduled yet.</p>
+          <p className="text-gray-300 text-xs mt-1">Add the first event above!</p>
+        </div>
+      ):(
+        <div className="space-y-3">
+          {sorted.map(ev=>{
+            const cfg=EVENT_TYPES[ev.type]||EVENT_TYPES.study;
+            return (
+              <div key={ev.id} className="flex items-start gap-4 bg-white border border-gray-100 rounded-2xl p-4 hover:border-indigo-200 hover:shadow-sm transition-all slide-in">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-xl flex-shrink-0">{cfg.icon}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm">{ev.title}</p>
+                  <div className="flex items-center gap-3 mt-1 flex-wrap">
+                    <span className="text-xs text-gray-400">📅 {fmtDate(ev.date)}</span>
+                    <span className="text-xs text-gray-400">🕐 {ev.time}</span>
+                  </div>
+                </div>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${cfg.color} flex-shrink-0`}>{cfg.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── TeacherProfile ───────────────────────────────────────────────────────────
+function TeacherProfile({teacher, onBack, onReviewSubmit, onEventAdd}) {
+  const grad=AVATAR_GRADIENTS[(teacher.id-1)%AVATAR_GRADIENTS.length];
+  const avgRating=teacher.reviews.length
+    ?(teacher.reviews.reduce((s,r)=>s+r.stars,0)/teacher.reviews.length).toFixed(1)
+    :teacher.rating.toFixed(1);
+  const ratingDist=[5,4,3,2,1].map(star=>({
+    star,count:teacher.reviews.filter(r=>r.stars===star).length,
+    pct:teacher.reviews.length?Math.round(teacher.reviews.filter(r=>r.stars===star).length/teacher.reviews.length*100):0
+  }));
+
+  return (
+    <div className="max-w-5xl mx-auto fade-in">
+      <button onClick={onBack} className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 mb-6 group">
+        <span style={{display:"inline-block",transition:"transform .2s"}} className="group-hover:-translate-x-1">←</span> Back to Teachers
+      </button>
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+        <div className={`h-32 bg-gradient-to-r ${grad} relative`}>
+          <div className="absolute inset-0 opacity-20" style={{backgroundImage:"radial-gradient(circle,white 1.5px,transparent 1.5px)",backgroundSize:"32px 32px"}}/>
+        </div>
+        <div className="px-8 pb-8">
+          <div className="flex flex-wrap items-end gap-5 -mt-10 mb-5">
+            <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${grad} flex items-center justify-center text-white text-2xl font-extrabold shadow-xl border-4 border-white flex-shrink-0`}>
+              {getInitials(teacher.name)}
+            </div>
+            <div className="pb-1">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl font-extrabold text-gray-900 serif">{teacher.name}</h1>
+                {teacher.rating>4.5&&<div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full text-sm font-bold">🥇 Top Rated</div>}
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xl">{SUBJECT_ICONS[teacher.subject]||"📚"}</span>
+                <span className="text-gray-500 font-medium">{teacher.subject}</span>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            {[{icon:"📍",label:"City",value:teacher.city},{icon:"🎂",label:"Age",value:teacher.age},{icon:"📞",label:"Phone",value:teacher.phone},{icon:"✉️",label:"Email",value:teacher.email}].map(item=>(
+              <div key={item.label} className="bg-gray-50 rounded-2xl px-4 py-3">
+                <div className="flex items-center gap-2 mb-1"><span>{item.icon}</span><span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{item.label}</span></div>
+                <p className="text-sm font-semibold text-gray-800 truncate">{item.value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-8 items-center">
+            <div className="text-center">
+              <div className="text-5xl font-extrabold text-gray-900">{avgRating}</div>
+              <div className="flex items-center gap-0.5 mt-1 justify-center">
+                {[1,2,3,4,5].map(s=>(
+                  <span key={s} className={`text-xl ${s<=Math.round(Number(avgRating))?"text-amber-400":"text-gray-200"}`}>★</span>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">{teacher.reviews.length} reviews</p>
+            </div>
+            <div className="flex-1 min-w-40 space-y-1.5">
+              {ratingDist.map(({star,count,pct})=>(
+                <div key={star} className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 w-4 text-right">{star}</span>
+                  <span className="text-amber-400 text-xs">★</span>
+                  <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div className="bar-fill bg-amber-400 h-full rounded-full" style={{width:`${pct}%`}}/>
+                  </div>
+                  <span className="text-xs text-gray-400 w-6">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2"><span>💬</span> Student Reviews</h3>
+          {teacher.reviews.length===0?(
+            <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+              <div className="text-4xl mb-2">🌟</div>
+              <p className="text-gray-500 font-medium">No reviews yet—be the first!</p>
+              <p className="text-gray-300 text-xs mt-1">Share your experience below.</p>
+            </div>
+          ):(
+            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+              {[...teacher.reviews].reverse().map(review=>(
+                <div key={review.id} className="bg-white border border-gray-100 rounded-2xl p-4 hover:border-indigo-100 transition-all slide-in">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm">{review.author}</p>
+                      {review.date&&<p className="text-xs text-gray-400">{fmtDate(review.date)}</p>}
+                    </div>
+                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                      {[1,2,3,4,5].map(s=>(
+                        <span key={s} className={`text-sm ${s<=review.stars?"text-amber-400":"text-gray-200"}`}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed">{review.comment}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          <ReviewSystem onSubmit={onReviewSubmit}/>
+        </div>
+        <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+          <EventCalendar events={teacher.events} onAddEvent={onEventAdd}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+const ALL_SUBJECTS=["All",...Array.from(new Set(INITIAL_TEACHERS.map(t=>t.subject))).sort()];
+const ALL_CITIES=["All",...Array.from(new Set(INITIAL_TEACHERS.map(t=>t.city))).sort()];
+
+function App() {
+  const [teachers,setTeachers]=useState(INITIAL_TEACHERS);
+  const [selected,setSelected]=useState(null);
+  const [search,setSearch]=useState("");
+  const [subjectFilter,setSubjectFilter]=useState("All");
+  const [cityFilter,setCityFilter]=useState("All");
+  const [sortBy,setSortBy]=useState("rating");
+
+  const filtered=teachers.filter(t=>{
+    const q=search.toLowerCase();
+    return (!q||t.name.toLowerCase().includes(q)||t.subject.toLowerCase().includes(q)||t.city.toLowerCase().includes(q))
+      &&(subjectFilter==="All"||t.subject===subjectFilter)
+      &&(cityFilter==="All"||t.city===cityFilter);
+  }).sort((a,b)=>sortBy==="rating"?b.rating-a.rating:sortBy==="reviews"?b.reviews.length-a.reviews.length:a.name.localeCompare(b.name));
+
+  const recalcTeacher=(t,review)=>{
+    const newReviews=[...t.reviews,{...review,id:Date.now(),date:new Date().toISOString().split("T")[0]}];
+    return {...t,reviews:newReviews,rating:Math.round(newReviews.reduce((s,r)=>s+r.stars,0)/newReviews.length*10)/10};
+  };
+
+  const handleReviewSubmit=(review)=>{
+    setTeachers(prev=>prev.map(t=>t.id===selected.id?recalcTeacher(t,review):t));
+    setSelected(prev=>recalcTeacher(prev,review));
+  };
+
+  const handleEventAdd=(event)=>{
+    const newEv={...event,id:Date.now()};
+    setTeachers(prev=>prev.map(t=>t.id===selected.id?{...t,events:[...t.events,newEv]}:t));
+    setSelected(prev=>({...prev,events:[...prev.events,newEv]}));
+  };
+
+  const handleCardClick=(teacher)=>{
+    setSelected(teachers.find(t=>t.id===teacher.id)||teacher);
+    window.scrollTo({top:0,behavior:"smooth"});
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <button onClick={()=>setSelected(null)} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-extrabold text-lg">E</div>
+              <div>
+                <span className="text-xl font-extrabold text-gray-900 tracking-tight">EduReview</span>
+                <span className="hidden sm:inline text-xs font-medium text-gray-400 ml-2 bg-gray-100 px-2 py-0.5 rounded-full">Teacher Rating Portal</span>
+              </div>
+            </button>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span className="text-indigo-600 font-bold">{teachers.length}</span> Teachers
+              <span className="text-gray-300">·</span>
+              <span className="text-indigo-600 font-bold">{teachers.reduce((s,t)=>s+t.reviews.length,0)}</span> Reviews
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {selected?(
+          <TeacherProfile teacher={selected} onBack={()=>setSelected(null)} onReviewSubmit={handleReviewSubmit} onEventAdd={handleEventAdd}/>
+        ):(
+          <>
+            <div className="text-center mb-10">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3 serif">Find Your Perfect Teacher</h1>
+              <p className="text-gray-500 text-lg max-w-xl mx-auto">Honest reviews from real students. Discover the educators who make a difference.</p>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-8">
+              <div className="flex flex-wrap gap-3 items-center">
+                <div className="relative flex-1 min-w-52">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">🔍</span>
+                  <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name, subject, city..."
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"/>
+                </div>
+                <select value={subjectFilter} onChange={e=>setSubjectFilter(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50 cursor-pointer">
+                  {ALL_SUBJECTS.map(s=><option key={s}>{s}</option>)}
+                </select>
+                <select value={cityFilter} onChange={e=>setCityFilter(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50 cursor-pointer">
+                  {ALL_CITIES.map(c=><option key={c}>{c}</option>)}
+                </select>
+                <select value={sortBy} onChange={e=>setSortBy(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50 cursor-pointer">
+                  <option value="rating">Sort: Top Rated</option>
+                  <option value="reviews">Sort: Most Reviewed</option>
+                  <option value="name">Sort: Name A–Z</option>
+                </select>
+                {(search||subjectFilter!=="All"||cityFilter!=="All")&&(
+                  <button onClick={()=>{setSearch("");setSubjectFilter("All");setCityFilter("All");}}
+                    className="text-sm text-red-500 hover:text-red-700 font-semibold px-3 py-2.5 rounded-xl hover:bg-red-50 transition-all">✕ Reset</button>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                <span className="text-xs text-gray-400">Showing <span className="font-bold text-indigo-600">{filtered.length}</span> of {teachers.length} teachers</span>
+                {filtered.filter(t=>t.rating>4.5).length>0&&(
+                  <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full font-medium">🥇 {filtered.filter(t=>t.rating>4.5).length} top rated</span>
+                )}
+              </div>
+            </div>
+
+            {filtered.length===0?(
+              <div className="text-center py-20">
+                <div className="text-6xl mb-4">🔭</div>
+                <h3 className="text-xl font-bold text-gray-700 mb-2">No teachers found</h3>
+                <p className="text-gray-400">Try adjusting your search filters.</p>
+              </div>
+            ):(
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filtered.map(t=><TeacherCard key={t.id} teacher={t} onClick={handleCardClick}/>)}
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      <footer className="mt-20 border-t border-gray-100 py-8 text-center text-sm text-gray-400">
+        <p><span className="font-bold text-indigo-600">EduReview</span> · Empowering students with honest teacher ratings</p>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
